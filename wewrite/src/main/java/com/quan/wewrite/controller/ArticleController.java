@@ -10,7 +10,6 @@ import com.quan.wewrite.vo.params.PageParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-//json数据交互41
 @RestController
 @RequestMapping("articles")
 public class ArticleController {
