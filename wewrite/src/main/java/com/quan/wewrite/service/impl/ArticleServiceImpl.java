@@ -8,14 +8,12 @@ import com.quan.wewrite.dao.mapper.ArticleBodyMapper;
 import com.quan.wewrite.dao.mapper.ArticleMapper;
 import com.quan.wewrite.dao.mapper.ArticleTagMapper;
 import com.quan.wewrite.dao.mapper.FavoritesMapper;
+import com.quan.wewrite.dao.pojo.*;
 import com.quan.wewrite.service.*;
-import com.quan.wewrite.dao.pojo.Article;
-import com.quan.wewrite.dao.pojo.ArticleBody;
-import com.quan.wewrite.dao.pojo.ArticleTag;
-import com.quan.wewrite.dao.pojo.SysUser;
 import com.quan.wewrite.utils.UserThreadLocal;
 import com.quan.wewrite.vo.*;
 import com.quan.wewrite.vo.params.ArticleParam;
+import com.quan.wewrite.vo.params.FavoritesParam;
 import com.quan.wewrite.vo.params.PageParams;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.joda.time.DateTime;
@@ -276,6 +274,33 @@ public class ArticleServiceImpl implements ArticleService {
             rocketMQTemplate.convertAndSend("blog-deleteArticle-failed",keys);
         }
         return Result.success(amd);
+    }
+
+    @Override
+    public Result delFavoritesArticle(FavoritesParam favoritesParam) {
+        LambdaQueryWrapper<Favorites> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Favorites::getArticleId,favoritesParam.getArticleId());
+        queryWrapper.eq(Favorites::getUserId,favoritesParam.getUserId());
+        int integer = favoritesMapper.delete(queryWrapper);
+        if(integer < 1) return Result.fail(0,"取消收藏失败");
+        return Result.success("取消收藏成功");
+    }
+
+    @Override
+    public Result getIsFavorites(FavoritesParam favoritesParam) {
+        LambdaQueryWrapper<Favorites> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Favorites::getArticleId,favoritesParam.getArticleId());
+        queryWrapper.eq(Favorites::getUserId,favoritesParam.getUserId());
+        Integer integer = favoritesMapper.selectCount(queryWrapper);
+        if(integer < 1) return Result.fail(0,"无收藏");
+        return Result.success(integer);
+    }
+
+    @Override
+    public Result addFavoritesArticle(FavoritesParam favoritesParam) {
+        int insert = favoritesMapper.insert(new Favorites(Long.parseLong(favoritesParam.getUserId()), Long.parseLong(favoritesParam.getArticleId())));
+        if(insert<1) return Result.fail(-1,"收藏失败");
+        return Result.success("收藏成功");
     }
 
     @Override

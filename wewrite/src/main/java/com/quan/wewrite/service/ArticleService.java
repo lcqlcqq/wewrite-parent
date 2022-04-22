@@ -3,6 +3,7 @@ package com.quan.wewrite.service;
 import com.quan.wewrite.vo.ArticleVo;
 import com.quan.wewrite.vo.Result;
 import com.quan.wewrite.vo.params.ArticleParam;
+import com.quan.wewrite.vo.params.FavoritesParam;
 import com.quan.wewrite.vo.params.PageParams;
 
 public interface ArticleService {
@@ -67,4 +68,25 @@ public interface ArticleService {
      * @return
      */
     Result getFavoritesArticle(String userId);
+
+    /**
+     * 收藏文章
+     * @param favoritesParam
+     * @return
+     */
+    Result addFavoritesArticle(FavoritesParam favoritesParam);
+
+    /**
+     * 查询是否收藏某文章
+     * @param favoritesParam
+     * @return
+     */
+    Result getIsFavorites(FavoritesParam favoritesParam);
+
+    /**
+     * 取消收藏
+     * @param favoritesParam
+     * @return
+     */
+    Result delFavoritesArticle(FavoritesParam favoritesParam);
 }

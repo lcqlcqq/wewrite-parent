@@ -6,6 +6,7 @@ import com.quan.wewrite.service.ArticleService;
 import com.quan.wewrite.vo.ArticleVo;
 import com.quan.wewrite.vo.Result;
 import com.quan.wewrite.vo.params.ArticleParam;
+import com.quan.wewrite.vo.params.FavoritesParam;
 import com.quan.wewrite.vo.params.PageParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -122,5 +123,32 @@ public class ArticleController {
     @LogAnnotation(module = "文章",operation = "收藏夹")
     public Result favorites(@PathVariable("id") String id){
         return articleService.getFavoritesArticle(id);
+    }
+
+    /**
+     * 查询某篇文章是否被收藏
+     * @return
+     */
+    @PostMapping("fav/query")
+    @LogAnnotation(module = "文章",operation = "查看文章是否被收藏")
+    public Result getIsFavorites(@RequestBody FavoritesParam favoritesParam){
+        System.out.println("文章id："+favoritesParam.getArticleId());
+        return articleService.getIsFavorites(favoritesParam);
+    }
+    /**
+     * 收藏文章
+     */
+    @PostMapping("fav/add")
+    @LogAnnotation(module = "文章",operation = "收藏文章")
+    public Result insertFavorites(@RequestBody FavoritesParam favoritesParam){
+        return articleService.addFavoritesArticle(favoritesParam);
+    }
+    /**
+     * 取消收藏文章
+     */
+    @PostMapping("fav/del")
+    @LogAnnotation(module = "文章",operation = "收藏文章")
+    public Result delFavorites(@RequestBody FavoritesParam favoritesParam){
+        return articleService.delFavoritesArticle(favoritesParam);
     }
 }
