@@ -20,7 +20,6 @@ public class ArticleController {
      * @param pageParams
      * @return
      */
-    //Result是统一结果返回
     @PostMapping
     @LogAnnotation(module = "文章",operation = "获取首页文章列表")  //加上自定义注解，代表对接口记录日志
     @Cache(expire = 5 * 60 * 1000,name = "article_lists")
