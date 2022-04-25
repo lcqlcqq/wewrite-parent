@@ -6,13 +6,14 @@ import com.quan.wewrite.dao.pojo.Article;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.util.Random;
+
 @Component
 public class ThreadService {
 
     //使用线程池，异步操作，更新阅读量
     @Async("taskExecutor")
     public void updateViewCount(ArticleMapper articleMapper, Article article){
-
         Article articleUpdate = new Article();
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         articleUpdate.setViewCounts(article.getViewCounts() + 1);
@@ -21,17 +22,24 @@ public class ThreadService {
         //乐观锁：确认没被其它线程抢先修改
         queryWrapper.eq(Article::getViewCounts,article.getViewCounts());
         //相当于 update article set view_count = 100 where view_count = 99 and id = 1
-        int updateResult = articleMapper.update(articleUpdate, queryWrapper);
+        int update = articleMapper.update(articleUpdate, queryWrapper);
+        while (update == 0){
+            int random=(int)(Math.random()*5+1);
+            try {
+                Thread.sleep(random* 1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            Article nowArticle = articleMapper.selectById(article.getId());
+            articleUpdate.setViewCounts(nowArticle.getViewCounts()+1);
+            LambdaQueryWrapper<Article> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.eq(Article::getId,nowArticle.getId());
+            queryWrapper1.eq(Article::getViewCounts,nowArticle.getViewCounts());
+            update = articleMapper.update(articleUpdate,queryWrapper1);
+        }
+    }
+    public void updateViewCountByRedis(Article article){
 
-        if(updateResult==0){
-            updateViewCount(articleMapper,article);
-        }
-        try {
-            //睡眠5秒 证明不会影响主线程的使用
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
     //更新评论数
     @Async("taskExecutor")

@@ -141,7 +141,7 @@ public class ArticleServiceImpl implements ArticleService {
         //更新阅读量，更新数据库是加写锁的，会阻塞读操作，性能就会比较低
         //更新增加了这个接口的耗时。一旦更新出问题，不能影响查看文章的操作
         //线程池，另起线程处理更新
-        threadService.updateViewCount(articleMapper,article);
+        threadService.updateViewCount(articleMapper, article);
         return articleVo;
     }
 
@@ -323,8 +323,8 @@ public class ArticleServiceImpl implements ArticleService {
         Set<String> keys = redisTemplate.keys("article_" + "*");
         //删除缓存失败了
         if(redisTemplate.delete(keys) <= 0) {
-            //rocketMQTemplate.convertAndSend("blog-deleteArticle-failed",keys);
-            System.out.println("已经没有缓存了");
+            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed",keys);
+            //System.out.println("已经没有缓存了");
         }
         return Result.success(updateRes);
     }
@@ -358,6 +358,7 @@ public class ArticleServiceImpl implements ArticleService {
         BeanUtils.copyProperties(article,articleVo);
 
         articleVo.setCreateDate(new DateTime(article.getCreateDate()).toString("yyyy-MM-dd HH:mm"));
+
         //并不是所有的接口 都需要标签 ，作者信息
         if (isTag){
             Long articleId = article.getId();
