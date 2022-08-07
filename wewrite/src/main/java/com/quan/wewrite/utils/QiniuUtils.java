@@ -13,8 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class QiniuUtils {
-
-    public static  final String url = "https://r5j9fqh80.hn-bkt.clouddn.com/";
+    //七牛云的 CDN 域名，这里是测试域名
+    public static  final String url = "https://rfgy2d7jj.sabkt.gdipper.com/";
 
     @Value("${qiniu.accessKey}")
     private  String accessKey;
@@ -24,11 +24,12 @@ public class QiniuUtils {
     public  boolean upload(MultipartFile file,String fileName){
 
         //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.huanan());
+        Configuration cfg = new Configuration(Region.autoRegion());
         //...其他参数参考类注释
         UploadManager uploadManager = new UploadManager(cfg);
         //...生成上传凭证，然后准备上传
-        String bucket = "quanc";
+        //桶名称
+        String bucket = "wewrite-img";
         //默认不指定key的情况下，以文件内容的hash值作为文件名
         try {
             byte[] uploadBytes = file.getBytes();

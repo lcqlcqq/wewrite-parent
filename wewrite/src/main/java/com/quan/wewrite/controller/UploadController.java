@@ -21,7 +21,7 @@ public class UploadController {
 
     @PostMapping
     public Result upload(@RequestParam("image") MultipartFile file){
-        String fileName = UUID.randomUUID().toString() + "." + StringUtils.substringAfterLast(file.getOriginalFilename(), ".");
+        String fileName = UUID.randomUUID() + "." + StringUtils.substringAfterLast(file.getOriginalFilename(), ".");
         //上传文件到七牛云
         //降低本身服务器的带宽消耗
         boolean upload = qiniuUtils.upload(file, fileName);

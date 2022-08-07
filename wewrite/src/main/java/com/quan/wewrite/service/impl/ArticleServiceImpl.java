@@ -86,41 +86,43 @@ public class ArticleServiceImpl implements ArticleService {
 
     /**
      * 自定义sql重写这个方法
+     *
      * @param pageParams
      * @return
      */
     @Override
     public Result listArticles(PageParams pageParams) {
-        Page<Article> page = new Page<>(pageParams.getPage(),pageParams.getPageSize());
+        Page<Article> page = new Page<>(pageParams.getPage(), pageParams.getPageSize());
         IPage<Article> articleIPage = this.articleMapper.listArticle(
                 page,
                 pageParams.getCategoryId(),
                 pageParams.getTagId(),
                 pageParams.getYear(),
                 pageParams.getMonth());
-        return Result.success(copyList(articleIPage.getRecords(),true,true));
+        return Result.success(copyList(articleIPage.getRecords(), true, true));
     }
+
     @Override
     public Result hotArticles(int limit) {
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(Article::getViewCounts);
-        queryWrapper.select(Article::getId,Article::getTitle);
-        queryWrapper.last("limit "+limit);
+        queryWrapper.select(Article::getId, Article::getTitle);
+        queryWrapper.last("limit " + limit);
         //select * id,title from article order by view_counts desc limit 5
         List<Article> articles = articleMapper.selectList(queryWrapper);
-        return Result.success(copyList(articles,false,false,false,false));
+        return Result.success(copyList(articles, false, false, false, false));
     }
 
     @Override
     public Result newArticles(int limit) {
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(Article::getCreateDate);
-        queryWrapper.select(Article::getId,Article::getTitle);
-        queryWrapper.last("limit "+limit);
+        queryWrapper.select(Article::getId, Article::getTitle);
+        queryWrapper.last("limit " + limit);
         //select id,title from article order by create_date desc limit 5
         List<Article> articles = articleMapper.selectList(queryWrapper);
 
-        return Result.success(copyList(articles,false,false,false,false));
+        return Result.success(copyList(articles, false, false, false, false));
     }
 
 
@@ -137,7 +139,7 @@ public class ArticleServiceImpl implements ArticleService {
          * 2. 根据bodyid和categoryid 关联查询
          */
         Article article = articleMapper.selectById(id);
-        ArticleVo articleVo = copy(article,true,true,true,true);
+        ArticleVo articleVo = copy(article, true, true, true, true);
         //更新阅读量，更新数据库是加写锁的，会阻塞读操作，性能就会比较低
         //更新增加了这个接口的耗时。一旦更新出问题，不能影响查看文章的操作
         //线程池，另起线程处理更新
@@ -174,7 +176,7 @@ public class ArticleServiceImpl implements ArticleService {
         article.setWeight(Article.Article_Common);
         article.setBodyId(-1L);
         //如果旧文章存在，那么是更新操作
-        if(a!=null){
+        if (a != null) {
             //要保留几个旧的文章数据
             Integer viewCounts = a.getViewCounts();
             Integer commentCounts = a.getCommentCounts();
@@ -187,16 +189,16 @@ public class ArticleServiceImpl implements ArticleService {
 
             //删除旧的文章内容
             LambdaQueryWrapper<ArticleBody> queryBody = new LambdaQueryWrapper<>();
-            queryBody.eq(ArticleBody::getArticleId,articleId);
+            queryBody.eq(ArticleBody::getArticleId, articleId);
             Long BodyId = articleBodyMapper.selectOne(queryBody).getId();
             articleBodyMapper.deleteById(BodyId);
             //删除旧的文章所有标签
             LambdaQueryWrapper<ArticleTag> queryTag = new LambdaQueryWrapper<>();
-            queryTag.eq(ArticleTag::getArticleId,articleId);
+            queryTag.eq(ArticleTag::getArticleId, articleId);
             queryTag.select(ArticleTag::getId);
             List<ArticleTag> TagItems = articleTagMapper.selectList(queryTag);
             List<Long> TagIds = new ArrayList<>();
-            for(ArticleTag at : TagItems){
+            for (ArticleTag at : TagItems) {
                 TagIds.add(at.getId());
             }
             articleTagMapper.deleteBatchIds(TagIds);
@@ -229,16 +231,16 @@ public class ArticleServiceImpl implements ArticleService {
         //ArticleVo articleVo = new ArticleVo();
         //articleVo.setId(article.getId());
         //return Result.success(articleVo);
-        Map<String,String> map = new HashMap<>();
-        map.put("id",article.getId().toString());
+        Map<String, String> map = new HashMap<>();
+        map.put("id", article.getId().toString());
 
         //删除文章缓存
         Set<String> keys = redisTemplate.keys("article_" + "*");
         keys.addAll(Objects.requireNonNull(redisTemplate.keys("tags_" + "*")));
         keys.addAll(Objects.requireNonNull(redisTemplate.keys("Categories_" + "*")));
         //删除缓存失败了
-        if(redisTemplate.delete(keys) <= 0) {
-            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed",keys);
+        if (redisTemplate.delete(keys) <= 0) {
+            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed", keys);
         }
         return Result.success(map);
     }
@@ -246,20 +248,20 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     public Result delete(Long articleId) {
-            //删除文章内容
-            LambdaQueryWrapper<ArticleBody> queryBody = new LambdaQueryWrapper<>();
-            queryBody.eq(ArticleBody::getArticleId,articleId);
-            Long BodyId = articleBodyMapper.selectOne(queryBody).getId();
+        //删除文章内容
+        LambdaQueryWrapper<ArticleBody> queryBody = new LambdaQueryWrapper<>();
+        queryBody.eq(ArticleBody::getArticleId, articleId);
+        Long BodyId = articleBodyMapper.selectOne(queryBody).getId();
         int abmd = articleBodyMapper.deleteById(BodyId);
         //删除文章所有标签记录
-            LambdaQueryWrapper<ArticleTag> queryTag = new LambdaQueryWrapper<>();
-            queryTag.eq(ArticleTag::getArticleId,articleId);
-            queryTag.select(ArticleTag::getId);
-            List<ArticleTag> TagItems = articleTagMapper.selectList(queryTag);
-            List<Long> TagIds = new ArrayList<>();
-            for(ArticleTag at : TagItems){
-                TagIds.add(at.getId());
-            }
+        LambdaQueryWrapper<ArticleTag> queryTag = new LambdaQueryWrapper<>();
+        queryTag.eq(ArticleTag::getArticleId, articleId);
+        queryTag.select(ArticleTag::getId);
+        List<ArticleTag> TagItems = articleTagMapper.selectList(queryTag);
+        List<Long> TagIds = new ArrayList<>();
+        for (ArticleTag at : TagItems) {
+            TagIds.add(at.getId());
+        }
         int atmd = articleTagMapper.deleteBatchIds(TagIds);
         //删除文章记录
         int amd = articleMapper.deleteById(articleId);
@@ -270,8 +272,8 @@ public class ArticleServiceImpl implements ArticleService {
         keys.addAll(Objects.requireNonNull(redisTemplate.keys("tags_" + "*")));
         keys.addAll(Objects.requireNonNull(redisTemplate.keys("Categories_" + "*")));
         //删除缓存失败了
-        if(redisTemplate.delete(keys) <= 0) {
-            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed",keys);
+        if (redisTemplate.delete(keys) <= 0) {
+            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed", keys);
         }
         return Result.success(amd);
     }
@@ -279,34 +281,34 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Result delFavoritesArticle(FavoritesParam favoritesParam) {
         LambdaQueryWrapper<Favorites> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Favorites::getArticleId,favoritesParam.getArticleId());
-        queryWrapper.eq(Favorites::getUserId,favoritesParam.getUserId());
+        queryWrapper.eq(Favorites::getArticleId, favoritesParam.getArticleId());
+        queryWrapper.eq(Favorites::getUserId, favoritesParam.getUserId());
         int integer = favoritesMapper.delete(queryWrapper);
-        if(integer < 1) return Result.fail(0,"取消收藏失败");
+        if (integer < 1) return Result.fail(0, "取消收藏失败");
         return Result.success("取消收藏成功");
     }
 
     @Override
     public Result getIsFavorites(FavoritesParam favoritesParam) {
         LambdaQueryWrapper<Favorites> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Favorites::getArticleId,favoritesParam.getArticleId());
-        queryWrapper.eq(Favorites::getUserId,favoritesParam.getUserId());
+        queryWrapper.eq(Favorites::getArticleId, favoritesParam.getArticleId());
+        queryWrapper.eq(Favorites::getUserId, favoritesParam.getUserId());
         Integer integer = favoritesMapper.selectCount(queryWrapper);
-        if(integer < 1) return Result.fail(0,"无收藏");
+        if (integer < 1) return Result.fail(0, "无收藏");
         return Result.success(integer);
     }
 
     @Override
     public Result addFavoritesArticle(FavoritesParam favoritesParam) {
         int insert = favoritesMapper.insert(new Favorites(Long.parseLong(favoritesParam.getUserId()), Long.parseLong(favoritesParam.getArticleId())));
-        if(insert<1) return Result.fail(-1,"收藏失败");
+        if (insert < 1) return Result.fail(-1, "收藏失败");
         return Result.success("收藏成功");
     }
 
     @Override
     public Result getFavoritesArticle(String id) {
         List<Article> articleList = articleMapper.listFavorites(Long.parseLong(id));
-        return Result.success(copyList(articleList,true,true));
+        return Result.success(copyList(articleList, true, true));
     }
 
 
@@ -314,7 +316,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Transactional
     public Result setTop(Long id) {
         Article article = articleMapper.selectById(id);
-        if(article.getWeight()==0)
+        if (article.getWeight() == 0)
             article.setWeight(1);
         else
             article.setWeight(0);
@@ -322,8 +324,8 @@ public class ArticleServiceImpl implements ArticleService {
         //只删除文章列表相关的缓存
         Set<String> keys = redisTemplate.keys("article_" + "*");
         //删除缓存失败了
-        if(redisTemplate.delete(keys) <= 0) {
-            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed",keys);
+        if (redisTemplate.delete(keys) <= 0) {
+            rocketMQTemplate.convertAndSend("blog-deleteArticle-failed", keys);
             //System.out.println("已经没有缓存了");
         }
         return Result.success(updateRes);
@@ -332,47 +334,48 @@ public class ArticleServiceImpl implements ArticleService {
     private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor) {
         List<ArticleVo> articleVoList = new ArrayList<>();
         for (Article record : records) {
-            articleVoList.add(copy(record,isTag,isAuthor,false,false));
+            articleVoList.add(copy(record, isTag, isAuthor, false, false));
         }
         return articleVoList;
     }
 
-    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor,boolean isBody) {
+    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor, boolean isBody) {
         List<ArticleVo> articleVoList = new ArrayList<>();
         for (Article record : records) {
-            articleVoList.add(copy(record,isTag,isAuthor,isBody,false));
-        }
-        return articleVoList;
-    }
-    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor,boolean isBody,boolean isCategory) {
-        List<ArticleVo> articleVoList = new ArrayList<>();
-        for (Article record : records) {
-            articleVoList.add(copy(record,isTag,isAuthor,isBody,isCategory));
+            articleVoList.add(copy(record, isTag, isAuthor, isBody, false));
         }
         return articleVoList;
     }
 
-    private ArticleVo copy(Article article, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory){
+    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory) {
+        List<ArticleVo> articleVoList = new ArrayList<>();
+        for (Article record : records) {
+            articleVoList.add(copy(record, isTag, isAuthor, isBody, isCategory));
+        }
+        return articleVoList;
+    }
+
+    private ArticleVo copy(Article article, boolean isTag, boolean isAuthor, boolean isBody, boolean isCategory) {
         ArticleVo articleVo = new ArticleVo();
         articleVo.setId(String.valueOf(article.getId()));
-        BeanUtils.copyProperties(article,articleVo);
+        BeanUtils.copyProperties(article, articleVo);
 
         articleVo.setCreateDate(new DateTime(article.getCreateDate()).toString("yyyy-MM-dd HH:mm"));
 
         //并不是所有的接口 都需要标签 ，作者信息
-        if (isTag){
+        if (isTag) {
             Long articleId = article.getId();
             articleVo.setTags(tagService.findTagsByArticleId(articleId));
         }
-        if (isAuthor){
+        if (isAuthor) {
             Long authorId = article.getAuthorId();
             articleVo.setAuthor(sysUserService.findSysUserById(authorId).getNickname());
         }
-        if (isBody){
+        if (isBody) {
             ArticleBodyVo articleBody = findArticleBody(article.getId());
             articleVo.setBody(articleBody);
         }
-        if (isCategory){
+        if (isCategory) {
             CategoryVo categoryVo = findCategory(article.getCategoryId());
             articleVo.setCategory(categoryVo);
         }
@@ -380,16 +383,14 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
 
-
     private CategoryVo findCategory(Long categoryId) {
         return categoryService.findCategoryById(categoryId);
     }
 
 
-
     private ArticleBodyVo findArticleBody(Long articleId) {
         LambdaQueryWrapper<ArticleBody> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ArticleBody::getArticleId,articleId);
+        queryWrapper.eq(ArticleBody::getArticleId, articleId);
         ArticleBody articleBody = articleBodyMapper.selectOne(queryWrapper);
         ArticleBodyVo articleBodyVo = new ArticleBodyVo();
         articleBodyVo.setContent(articleBody.getContent());

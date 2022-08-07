@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +112,7 @@ public class CommentsServiceImpl implements CommentsService {
         return commentMapper.deleteBatchIds(commentIds);
     }
 
+    @Transactional
     @Override
     public Result comment(CommentParam commentParam) {
         SysUser sysUser = UserThreadLocal.get();

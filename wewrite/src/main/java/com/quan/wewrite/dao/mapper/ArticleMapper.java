@@ -38,4 +38,6 @@ public interface ArticleMapper extends BaseMapper<Article> {
     @Select("SELECT * FROM ms_article where ms_article.id in " +
             "(SELECT ms_favorites.article_id FROM ms_favorites where ms_favorites.user_id = #{userId})")
     List<Article> listFavorites(@Param("userId") Long userId);
+    //连接代替子查询：
+    //SELECT * FROM ms_article left join ms_favorites on ms_article.id = ms_favorites.article_id where ms_favorites.user_id=1
 }

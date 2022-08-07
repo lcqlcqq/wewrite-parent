@@ -8,8 +8,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="wewrite" />
-        <module name="wewrite-admin" />
         <module name="blog" />
+        <module name="wewrite-admin" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

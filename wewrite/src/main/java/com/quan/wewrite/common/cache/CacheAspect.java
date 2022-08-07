@@ -72,7 +72,7 @@ public class CacheAspect {
                 log.info("使用缓存~~~,{},{}",className,methodName);
                 return JSON.parseObject(redisValue, Result.class);
             }
-            Object proceed = pjp.proceed();
+            Object proceed = pjp.proceed();  //调用业务层方法（切入点方法）
             redisTemplate.opsForValue().set(redisKey,JSON.toJSONString(proceed), Duration.ofMillis(expire));
             log.info("存入缓存~~~ {},{}",className,methodName);
             return proceed;

@@ -25,6 +25,8 @@ public class WebMVCConfig implements WebMvcConfigurer {
                 .addPathPatterns("/test")
                 .addPathPatterns("/comments/create/change")  //评论之前需要登录。
                 .addPathPatterns("/articles/publish")
+                .addPathPatterns("/articles/fav/add")
+                .addPathPatterns("/articles/fav/del")
         ;
     }
 }
